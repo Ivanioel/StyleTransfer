@@ -1,20 +1,19 @@
-from PIL import Image
+import os.path
+
 import torch
 import torch.nn as nn
-import torchvision.transforms as transforms
-import torchvision.utils as save_image
 import torchvision.models as models
-import os.path
 
 # Select this features as in the paper
 vgg_feature_layers = [0, 5, 10, 19, 28]
+
 
 class VGG(nn.Module):
     def __init__(self, feature_layers, model_path=None):
         super(VGG, self).__init__()
         self.feature_layers = feature_layers
         # After the last we want all are unecessary
-        
+
         if model_path is not None and os.path.isfile(model_path):
             model_pre = torch.load(model_path)
         else:

@@ -1,12 +1,9 @@
-from PIL import Image
 import torch
-import torch.optim as optim
-import torch.nn as nn
 import torchvision.transforms as transforms
-import torchvision.utils as save_image
-import torchvision.models as models
+from PIL import Image
 
 device = torch.device("cuda" if torch.cuda.is_available else "cpu")
+
 
 def simple_loader(device, img_size):
     loader = transforms.Compose([
@@ -16,6 +13,7 @@ def simple_loader(device, img_size):
     ])
     return loader
 
+
 def load_transform_image(image_name, loader, device=None, path='./'):
     image_path = path + image_name
     image = Image.open(image_path)
@@ -23,5 +21,3 @@ def load_transform_image(image_name, loader, device=None, path='./'):
         device = torch.device("cuda" if torch.cuda.is_available else "cpu")
     image = loader(image).unsqueeze(0).to(device)
     return image
-
-
