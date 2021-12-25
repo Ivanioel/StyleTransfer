@@ -6,37 +6,76 @@ import torchvision
 import torch.optim as optim
 import torch.nn as nn
 import torchvision.transforms as transforms
+import argparse
 
 def main():
+    ####################################
+    # Arguments
+    ####################################
+    parser = argparse.ArgumentParser(description='Style Transfer from one image to another')
+    parser.add_argument('-o', '--original_img', type=str, 
+                        help='Path from the original image', required=True)
+    parser.add_argument('-s', '--style_img', type=str, 
+                        help='Path from the style image', required=True)
+    # Hyperparameters
+    parser.add_argument('--epochs', type=int, default=2000, 
+                        help='Number of epochs to try')
+    parser.add_argument('--lr', type=int, default=0.001, 
+                        help='Learning rate')
+    parser.add_argument('--alpha', type=int, default=1, 
+                        help='Weigth of the original image')
+    parser.add_argument('--beta', type=int, default=0.01, 
+                        help='Weigth of the style image')
 
+    parser.add_argument('--optimizer', type=str, 
+                        default='Adam', choices=['Adam'],
+                        help='Optimizer')
+
+    parser.add_argument('--model', type=str, 
+                        default='VGG19', choices=['VGG19'],
+                        help='Backbone model')
+
+    args = parser.parse_args()
     #device = torch.device("cuda" if torch.cuda.is_available else "cpu")
     device = "cpu"
     loader = image_utils.simple_loader(device, 255)
     ####################################
     # Images
     ####################################
-    original_img = image_utils.load_transform_image('../images/chipys.jpg', loader, device)
-    style_img = image_utils.load_transform_image('../images/the-great-wave-off-kanagawa-4-1366×768.jpg', loader, device)
+    original_img = image_utils.load_transform_image(args.original_img, loader, device)
+    style_img = image_utils.load_transform_image(args.style_img, loader, device)
     # Noise
     #generated_img = torch.randn(original_image.shape, device=device, requires_grad=True)
-    # Grad is as the net is going to be freeze except for this
+
+    # Grad is necesry as the net is going to be freeze except for this
     generated_img = original_img.clone().requires_grad_(True)
     ####################################
     # Hyperparameters
     ####################################
-    epochs = 2000
-    lr = 0.001
-    alpha = 1
-    beta = 0.01
-    optimizer = optim.Adam([generated_img], lr=lr)
-    # Select this features as in the paper
-    vgg_feature_layers = [0, 5, 10, 19, 28]
+    epochs = args.epochs
+    lr = args.lr
+    alpha = args.alpha
+    beta = args.beta
+
+    if args.optimizer == 'Adam':
+        optimizer = optim.Adam([generated_img], lr=lr)
+    else:
+        print('Optimizer not in the possible choices')
+        exit(0)
+
+    if args.model == 'VGG19':
+        # Select this features as in the paper
+        vgg_feature_layers = [0, 5, 10, 19, 28]
+        model = my_models.VGG(vgg_feature_layers).to(device)
+    else:
+        print('Model not in the possible choices')
+        exit(0)
 
     ####################################
     # Evaluating
     ####################################
-    model = my_models.VGG(vgg_feature_layers).to(device).eval()
-    for epoch in range(epochs):
+    model.eval()
+    for epoch in range(epochs+1):
         # Obtain features
         generated_f = model(generated_img)
         original_f = model(original_img)
@@ -67,7 +106,8 @@ def main():
         ####################################
         # Saving images
         ####################################
-        if epoch % 10 == 0:
+        # I get desesperated if I have to execute over CPU
+        if device == 'cpu' and epoch % 10 == 0:
             print(f"{epoch}/{epochs}")
         if epoch % 200 == 0:
             print(f"Epoch {epoch}| Loss: {total_loss}") 
