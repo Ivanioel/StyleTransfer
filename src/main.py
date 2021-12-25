@@ -17,9 +17,13 @@ def main():
                         help='Path from the original image', required=True)
     parser.add_argument('-s', '--style_img', type=str,
                         help='Path from the style image', required=True)
+    parser.add_argument('--img_size', type=int, default=255,
+                        help='Size of the images')
     # Hyperparameters
     parser.add_argument('--epochs', type=int, default=2000,
                         help='Number of epochs to try')
+    parser.add_argument('--show', type=int, default=200,
+                        help='Every how many epoch show an image')                    
     parser.add_argument('--lr', type=float, default=0.001,
                         help='Learning rate')
     parser.add_argument('--alpha', type=float, default=1,
@@ -28,8 +32,10 @@ def main():
                         help='Weigth of the style image')
 
     parser.add_argument('--optimizer', type=str,
-                        default='Adam', choices=['Adam'],
+                        default='Adam', choices=['Adam','SGD', 'LBFGS'],
                         help='Optimizer')
+    parser.add_argument('--momentum', type=float, default=0,
+                        help='Momentum for SGD')
 
     parser.add_argument('--model', type=str,
                         default='VGG19', choices=['VGG19'],
@@ -38,7 +44,7 @@ def main():
     args = parser.parse_args()
     # device = torch.device("cuda" if torch.cuda.is_available else "cpu")
     device = "cpu"
-    loader = image_utils.simple_loader(device, 255)
+    loader = image_utils.simple_loader(device, args.img_size)
     ####################################
     # Images
     ####################################
@@ -59,12 +65,7 @@ def main():
     lr = args.lr
     alpha = args.alpha
     beta = args.beta
-
-    if args.optimizer == 'Adam':
-        optimizer = optim.Adam([generated_img], lr=lr)
-    else:
-        print('Optimizer not in the possible choices')
-        exit(0)
+    momentum = args.momentum
 
     if args.model == 'VGG19':
         # Select this features as in the paper
@@ -72,6 +73,16 @@ def main():
         model = my_models.VGG(vgg_feature_layers).to(device)
     else:
         print('Model not in the possible choices')
+        exit(0)
+
+    if args.optimizer == 'Adam':
+        optimizer = optim.Adam(model.parameters(), lr=lr)
+    elif args.optimizer == 'LBFGS':
+        optimizer = optim.LBFGS(model.parameters(), lr=lr)
+    elif args.optimizer == 'SGD':
+        optimizer = optim.SGD(model.parameters(), lr=lr, momentum=momentum)
+    else:
+        print('Optimizer not in the possible choices')
         exit(0)
 
     ####################################

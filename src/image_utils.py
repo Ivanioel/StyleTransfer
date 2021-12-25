@@ -16,7 +16,7 @@ def simple_loader(device, img_size):
 
 def load_transform_image(image_name, loader, device=None, path='./'):
     image_path = path + image_name
-    image = Image.open(image_path)
+    image = Image.open(image_path).convert('RGB')
     if device is None:
         device = torch.device("cuda" if torch.cuda.is_available else "cpu")
     image = loader(image).unsqueeze(0).to(device)
