@@ -20,11 +20,11 @@ def main():
     # Hyperparameters
     parser.add_argument('--epochs', type=int, default=2000,
                         help='Number of epochs to try')
-    parser.add_argument('--lr', type=int, default=0.001,
+    parser.add_argument('--lr', type=float, default=0.001,
                         help='Learning rate')
-    parser.add_argument('--alpha', type=int, default=1,
+    parser.add_argument('--alpha', type=float, default=1,
                         help='Weigth of the original image')
-    parser.add_argument('--beta', type=int, default=0.01,
+    parser.add_argument('--beta', type=float, default=0.01,
                         help='Weigth of the style image')
 
     parser.add_argument('--optimizer', type=str,
