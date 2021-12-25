@@ -113,10 +113,11 @@ def main():
             style_loss += torch.mean((G-A)**2)
 
         total_loss = alpha*original_loss + beta * style_loss
+        def closure():
+            optimizer.zero_grad()
+            total_loss.backward()
 
-        optimizer.zero_grad()
-        total_loss.backward()
-        optimizer.step()
+        optimizer.step(closure=closure)
 
         ####################################
         # Saving images
